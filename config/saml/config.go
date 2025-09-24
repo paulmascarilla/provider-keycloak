@@ -21,7 +21,22 @@ func Configure(p *config.Provider) {
 	})
 	p.AddResourceConfigurator("keycloak_saml_client", func(r *config.Resource) {
 		// We need to override the default group that upjet generated for
-		r.ShortGroup = Group
+        r.ShortGroup = "saml"
+		r.References["realm"] = config.Reference{
+			TerraformName: "keycloak_realm",
+		}
+
+        r.Sensitive.AdditionalConnectionDetailsFn = func(attr map[string]any) (map[string][]byte, error) {
+            conn := map[string][]byte{}
+            if a, ok := attr["client_id"].(string); ok {
+                conn["client_id"] = []byte(a)
+            }
+            return conn, nil
+        }
+
+        // Configuration spécifique si nécessaire
+        r.UseAsync = true
+
 	})
 
 	p.AddResourceConfigurator("keycloak_saml_client_default_scopes", func(r *config.Resource) {
